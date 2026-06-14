@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUYZAR - Ab Har Zarurat, Ek Hi Jagah</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #0B5D1E 0%, #1E3A8A 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .logo span { color: #FFD700; }
+        .location {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 18px;
+            border-radius: 25px;
+            color: white;
+            font-size: 14px;
+        }
+        .search-bar { flex: 1; max-width: 400px; }
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 30px;
+            outline: none;
+            background: rgba(255,255,255,0.95);
+            font-size: 14px;
+        }
+        .nav-icons { display: flex; gap: 20px; align-items: center; }
+        .nav-icons a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .cart-icon, .login-icon {
+            background: #FFD700;
+            color: #0B5D1E !important;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .cart-icon:hover, .login-icon:hover { transform: scale(1.05); background: white; }
+        .hero {
+            background: linear-gradient(135deg, rgba(11,93,30,0.85), rgba(30,58,138,0.85));
+            padding: 80px 20px;
+            text-align: center;
+            color: white;
+        }
+        .hero h1 { font-size: 52px; margin-bottom: 15px; letter-spacing: 2px; }
+        .hero p { font-size: 20px; margin-bottom: 20px; }
+        .free-offer {
+            background: #FFD700;
+            color: #0B5D1E;
+            display: inline-block;
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-weight: bold;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        .download-btn {
+            background: white;
+            color: #1E3A8A;
+            padding: 14px 35px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        .download-btn:hover { transform: scale(1.05); background: #FFD700; color: #0B5D1E; }
+        .categories-section { 
+            padding: 70px 30px; 
+            background: rgba(255,255,255,0.95);
+            min-height: 70vh;
+        }
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0B5D1E;
+            font-size: 42px;
+            font-weight: bold;
+        }
+        .category-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 35px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .category-card {
+            width: 320px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.4s;
+        }
+        .category-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .category-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            transition: all 0.3s;
+        }
+        .category-card:hover .category-image { transform: scale(1.05); }
+        .category-card h3 { 
+            margin: 20px 0 10px; 
+            color: #0B5D1E; 
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .category-card p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .shop-now-btn {
+            background: linear-gradient(135deg, #0B5D1E, #1E3A8A);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            margin: 15px 0 25px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .shop-now-btn:hover { transform: scale(1.05); background: #FFD700; color: #0B5D1E; }
+        footer {
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 50px 30px;
+            text-align: center;
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+        .footer-links a { color: white; text-decoration: none; font-size: 14px; }
+        .footer-links a:hover { color: #FFD700; }
+        @media (max-width: 768px) {
+            .header { flex-direction: column; }
+            .hero h1 { font-size: 32px; }
+            .category-card { width: 90%; }
+            .section-title { font-size: 32px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">BUYZAR<span>.shop</span></div>
+    <div class="location">📍 Begusarai, Bihar</div>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search products...">
+    </div>
+    <div class="nav-icons">
+        <a class="login-icon" onclick="alert('🔐 Login/Signup coming soon! Use Mobile: 7091342375')">🔐 Login / Signup</a>
+        <a class="cart-icon" onclick="alert('🛒 Cart feature coming soon!')">🛒 Cart</a>
+    </div>
+</div>
+
+<section class="hero">
+    <h1>AB HAR ZARURAT, EK HI JAGAH</h1>
+    <p>Groceries • Fruits • Vegetables • Medicines • Food • Fashion</p>
+    <div class="free-offer">🚚 FREE DELIVERY on orders above ₹199</div>
+    <a class="download-btn" onclick="alert('📱 App coming soon! Stay tuned!')">📱 Download App</a>
+</section>
+
+<section class="categories-section" id="categoriesSection">
+    <h2 class="section-title">✨ Shop by Categories ✨</h2>
+    <div class="category-grid" id="categoryGrid"></div>
+</section>
+
+<footer>
+    <div class="footer-links">
+        <a href="#">About Us</a>
+        <a href="#">Contact</a>
+        <a href="#">Partner Registration</a>
+        <a href="#">Become a Delivery Partner</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms & Conditions</a>
+    </div>
+    <p>📍 Begusarai, Bihar 851210 | 📞 +91 7091342375 | 📧 support@buyzar.com</p>
+    <p>© 2026 BUYZAR - Ab Har Zarurat, Ek Hi Jagah. All Rights Reserved.</p>
+</footer>
+
+<script>
+    // Static Categories - No Firebase Required
+    const categories = [
+        { 
+            id: "fruits_vegetables", 
+            name: "🥑 Fresh Fruits & Vegetables", 
+            image: "https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?w=600&h=400&fit=crop",
+            desc: "Farm fresh delivered daily",
+            products: [
+                { name: "🍎 Fresh Red Apple", price: 120, image: "https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg?w=200" },
+                { name: "🍌 Organic Banana", price: 50, image: "https://images.pexels.com/photos/1093030/pexels-photo-1093030.jpeg?w=200" },
+                { name: "🥬 Fresh Spinach", price: 30, image: "https://images.pexels.com/photos/807880/pexels-photo-807880.jpeg?w=200" },
+                { name: "🍅 Farm Tomato", price: 40, image: "https://images.pexels.com/photos/533280/pexels-photo-533280.jpeg?w=200" },
+                { name: "🥕 Fresh Carrot", price: 35, image: "https://images.pexels.com/photos/144248/pexels-photo-144248.jpeg?w=200" }
+            ]
+        },
+        { 
+            id: "groceries", 
+            name: "🛒 Groceries & Staples", 
+            image: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?w=600&h=400&fit=crop",
+            desc: "Rice, Atta, Oil, Spices & more",
+            products: [
+                { name: "🥛 Fresh Milk 1L", price: 55, image: "https://images.pexels.com/photos/5833884/pexels-photo-5833884.jpeg?w=200" },
+                { name: "🍚 Basmati Rice 5kg", price: 250, image: "https://images.pexels.com/photos/4110250/pexels-photo-4110250.jpeg?w=200" },
+                { name: "🌾 Whole Wheat Atta 5kg", price: 180, image: "https://images.pexels.com/photos/6207485/pexels-photo-6207485.jpeg?w=200" },
+                { name: "🫘 Toor Dal 1kg", price: 120, image: "https://images.pexels.com/photos/5709982/pexels-photo-5709982.jpeg?w=200" }
+            ]
+        },
+        { 
+            id: "medicines", 
+            name: "💊 Medicines & Healthcare", 
+            image: "https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?w=600&h=400&fit=crop",
+            desc: "Genuine medicines at best prices",
+            products: [
+                { name: "💊 Dolo 650 Tablet", price: 35, image: "https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?w=200" },
+                { name: "💊 Crocin Advance", price: 40, image: "https://images.pexels.com/photos/3683042/pexels-photo-3683042.jpeg?w=200" },
+                { name: "💊 Vitamin C Tablets", price: 150, image: "https://images.pexels.com/photos/380765/pexels-photo-380765.jpeg?w=200" }
+            ]
+        },
+        { 
+            id: "food", 
+            name: "🍔 Food & Restaurant", 
+            image: "https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?w=600&h=400&fit=crop",
+            desc: "Pizza, Burger, Biryani & more",
+            products: [
+                { name: "🍕 Margherita Pizza", price: 199, image: "https://images.pexels.com/photos/825661/pexels-photo-825661.jpeg?w=200" },
+                { name: "🍔 Chicken Burger", price: 99, image: "https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?w=200" },
+                { name: "🍛 Chicken Biryani", price: 149, image: "https://images.pexels.com/photos/5550946/pexels-photo-5550946.jpeg?w=200" }
+            ]
+        },
+        { 
+            id: "fashion", 
+            name: "👕 Fashion & Apparel", 
+            image: "https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg?w=600&h=400&fit=crop",
+            desc: "Shirts, Jeans, T-Shirts, Shoes",
+            products: [
+                { name: "👕 Cotton Casual T-Shirt", price: 399, image: "https://images.pexels.com/photos/428338/pexels-photo-428338.jpeg?w=200" },
+                { name: "👖 Classic Blue Jeans", price: 799, image: "https://images.pexels.com/photos/1598507/pexels-photo-1598507.jpeg?w=200" },
+                { name: "👟 Sports Shoes", price: 999, image: "https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?w=200" }
+            ]
+        }
+    ];
+
+    // Load categories
+    function loadCategories() {
+        let html = '';
+        categories.forEach(cat => {
+            html += `<div class="category-card" onclick="showProducts('${cat.id}')">
+                        <img src="${cat.image}" class="category-image" loading="lazy">
+                        <h3>${cat.name}</h3>
+                        <p>${cat.desc}</p>
+                        <button class="shop-now-btn">🛍️ Shop Now →</button>
+                    </div>`;
+        });
+        document.getElementById('categoryGrid').innerHTML = html;
+    }
+
+    // Show products in modal/popup
+    function showProducts(categoryId) {
+        let category = categories.find(c => c.id === categoryId);
+        if(!category) return;
+        
+        let productList = category.products.map(p => {
+            return `• ${p.name} - ₹${p.price}`;
+        }).join('\n');
+        
+        alert(`🛍️ ${category.name}\n\nAvailable Products:\n${productList}\n\n📞 Call 7091342375 to order!`);
+    }
+
+    // Search functionality
+    document.getElementById('searchInput')?.addEventListener('input', function(e) {
+        let searchTerm = e.target.value.toLowerCase();
+        if(searchTerm.length > 0) {
+            let allProducts = [];
+            categories.forEach(cat => {
+                cat.products.forEach(p => {
+                    if(p.name.toLowerCase().includes(searchTerm)) {
+                        allProducts.push(`${p.name} - ₹${p.price} (${cat.name})`);
+                    }
+                });
+            });
+            if(allProducts.length > 0) {
+                alert(`🔍 Search Results:\n${allProducts.join('\n')}\n\n📞 Call 7091342375 to order!`);
+            }
+        }
+    });
+
+    // Load everything
+    loadCategories();
+</script>
+</body>
+</html>
