@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUYZAR - Ab Har Zarurat, Ek Hi Jagah</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: #f8f9fa;
+        }
+        .header {
+            background: #0B5D1E;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            letter-spacing: 2px;
+        }
+        .logo span {
+            color: #FFD700;
+        }
+        .location {
+            background: #1a7a2e;
+            padding: 8px 15px;
+            border-radius: 25px;
+            color: white;
+            font-size: 13px;
+        }
+        .search-bar {
+            flex: 1;
+            max-width: 350px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+        .nav-icons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .nav-icons a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .cart-icon, .login-icon {
+            background: #FFD700;
+            color: #0B5D1E !important;
+            padding: 8px 12px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .hero {
+            background: linear-gradient(135deg, #0B5D1E, #7ED957);
+            padding: 50px 20px;
+            text-align: center;
+            color: white;
+        }
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+        .hero p {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .free-offer {
+            background: #FFD700;
+            color: #0B5D1E;
+            display: inline-block;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .download-btn {
+            background: white;
+            color: #0B5D1E;
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        .categories-section {
+            padding: 50px 20px;
+            background: white;
+        }
+        .section-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #0B5D1E;
+            font-size: 32px;
+        }
+        .category-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .category-card {
+            width: 280px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+            text-align: center;
+        }
+        .category-card:hover {
+            transform: translateY(-8px);
+        }
+        .category-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        .category-card h3 {
+            margin: 15px 0 5px;
+            color: #0B5D1E;
+        }
+        .explore-btn {
+            background: #0B5D1E;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 15px 0;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .products-section {
+            padding: 50px 20px;
+            background: #f0f9f0;
+            display: none;
+        }
+        .products-section.active {
+            display: block;
+        }
+        .back-btn {
+            background: #0B5D1E;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .products-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .product-card {
+            width: 220px;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .product-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .product-name {
+            margin: 10px 0 5px;
+            color: #333;
+        }
+        .product-price {
+            color: #0B5D1E;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .add-to-cart {
+            background: #FFD700;
+            color: #0B5D1E;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .cart-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 380px;
+            height: 100%;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+            z-index: 1001;
+            transition: right 0.3s;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .cart-sidebar.open {
+            right: 0;
+        }
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0B5D1E;
+        }
+        .close-cart {
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .cart-items {
+            margin-bottom: 20px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .cart-total {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .checkout-btn {
+            background: #0B5D1E;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+        footer {
+            background: #0B5D1E;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+        }
+        @media (max-width: 768px) {
+            .header { flex-direction: column; }
+            .search-bar { max-width: 100%; }
+            .hero h1 { font-size: 28px; }
+            .category-card { width: 45%; }
+            .product-card { width: 45%; }
+            .cart-sidebar { width: 100%; right: -100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">BUYZAR<span>.shop</span></div>
+    <div class="location">📍 Begusarai, Bihar</div>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search products...">
+    </div>
+    <div class="nav-icons">
+        <a href="#" class="login-icon" onclick="showLogin()">🔐 Login</a>
+        <a href="#" class="cart-icon" onclick="toggleCart()">🛒 Cart <span id="cartCount">0</span></a>
+    </div>
+</div>
+
+<section class="hero">
+    <h1>AB HAR ZARURAT, EK HI JAGAH</h1>
+    <p>Groceries • Fruits • Vegetables • Medicines • Food • Fashion</p>
+    <div class="free-offer">🚚 FREE DELIVERY on orders above ₹199</div>
+    <a href="#" class="download-btn" onclick="showAPK()">📱 Download App</a>
+</section>
+
+<section class="categories-section" id="categoriesSection">
+    <h2 class="section-title">Shop by Categories</h2>
+    <div class="category-grid" id="categoryGrid"></div>
+</section>
+
+<section class="products-section" id="productsSection">
+    <button class="back-btn" onclick="showCategories()">← Back to Categories</button>
+    <h2 class="section-title" id="categoryTitle"></h2>
+    <div class="products-grid" id="productsGrid"></div>
+</section>
+
+<div class="overlay" id="overlay" onclick="toggleCart()"></div>
+<div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+        <h3>Your Cart</h3>
+        <button class="close-cart" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-total">Total: ₹<span id="cartTotal">0</span></div>
+    <button class="checkout-btn" onclick="showCheckout()">Proceed to Checkout</button>
+</div>
+
+<div id="checkoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1002; justify-content:center; align-items:center;">
+    <div style="background:white; max-width:450px; width:90%; border-radius:15px; padding:25px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h3>Checkout</h3>
+            <button onclick="closeCheckout()" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px;">✕</button>
+        </div>
+        <input type="text" id="deliveryAddress" placeholder="Delivery Address" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
+        <select id="paymentMethod" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
+            <option value="cod">Cash on Delivery</option>
+            <option value="upi">UPI Payment</option>
+        </select>
+        <div id="upiSection" style="display:none; text-align:center; margin:15px 0;">
+            <img src="https://chart.googleapis.com/chart?cht=qr&chl=upi://pay?pa=7091342375@ybl&pn=Buyzar&am=&cu=INR&chs=250x250" style="width:200px;">
+            <p>Send to: <strong>7091342375@ybl</strong></p>
+        </div>
+        <button onclick="placeOrder()" style="background:#0B5D1E; color:white; width:100%; padding:12px; border:none; border-radius:25px;">Place Order</button>
+    </div>
+</div>
+
+<div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1002; justify-content:center; align-items:center;">
+    <div style="background:white; max-width:350px; width:90%; border-radius:15px; padding:25px; text-align:center;">
+        <h3>Login to Buyzar</h3>
+        <input type="text" id="mobileNumber" placeholder="Mobile Number" style="width:100%; padding:12px; margin:15px 0; border:1px solid #ddd; border-radius:8px;">
+        <button onclick="sendOTP()" style="background:#0B5D1E; color:white; width:100%; padding:12px; border:none; border-radius:25px;">Send OTP</button>
+        <div id="otpSection" style="display:none; margin-top:15px;">
+            <input type="text" id="otpCode" placeholder="Enter OTP" style="width:100%; padding:12px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
+            <button onclick="verifyOTP()" style="background:#FFD700; color:#0B5D1E; width:100%; padding:12px; border:none; border-radius:25px;">Verify</button>
+        </div>
+        <button onclick="closeLogin()" style="margin-top:10px; background:#ccc; border:none; padding:8px; border-radius:5px;">Close</button>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-links">
+        <a href="#">About Us</a>
+        <a href="#">Contact</a>
+        <a href="#">Partner Registration</a>
+        <a href="#">Become a Delivery Partner</a>
+        <a href="#">Privacy Policy</a>
+    </div>
+    <p>📍 Begusarai, Bihar | 📞 +91 7091342375 | 📧 support@buyzar.com</p>
+    <p>© 2026 BUYZAR - Ab Har Zarurat, Ek Hi Jagah. All Rights Reserved.</p>
+</footer>
+
+<script src="config.js"></script>
+<script>
+    let currentUser = null;
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    let currentCategory = '';
+    let allProducts = [];
+
+    function loadCategories() {
+        let html = '';
+        categories.forEach(cat => {
+            html += `<div class="category-card" onclick="loadProducts('${cat.id}','${cat.name}')">
+                        <img src="${cat.image}" class="category-image">
+                        <h3>${cat.name}</h3>
+                        <button class="explore-btn">Explore →</button>
+                    </div>`;
+        });
+        document.getElementById('categoryGrid').innerHTML = html;
+    }
+
+    async function loadProducts(categoryId, categoryName) {
+        currentCategory = categoryId;
+        document.getElementById('categoryTitle').innerHTML = categoryName;
+        document.getElementById('categoriesSection').style.display = 'none';
+        document.getElementById('productsSection').classList.add('active');
+        
+        const snapshot = await db.collection('products').where('category', '==', categoryId).get();
+        allProducts = [];
+        snapshot.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
+        displayProducts(allProducts);
+    }
+
+    function displayProducts(products) {
+        let html = '';
+        if(products.length === 0) html = '<p style="text-align:center;">No products yet.</p>';
+        else products.forEach(p => {
+            html += `<div class="product-card">
+                        <img src="${p.image || 'https://placehold.co/200x150/0B5D1E/white?text='+p.name}" class="product-image">
+                        <h4 class="product-name">${p.name}</h4>
+                        <p class="product-price">₹${p.price}</p>
+                        <button class="add-to-cart" onclick="addToCart('${p.id}','${p.name}',${p.price})">Add to Cart</button>
+                    </div>`;
+        });
+        document.getElementById('productsGrid').innerHTML = html;
+    }
+
+    function showCategories() {
+        document.getElementById('categoriesSection').style.display = 'block';
+        document.getElementById('productsSection').classList.remove('active');
+    }
+
+    function addToCart(id, name, price) {
+        let existing = cart.find(item => item.id === id);
+        if(existing) existing.quantity++;
+        else cart.push({id, name, price, quantity: 1});
+        updateCart();
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function updateCart() {
+        let total = 0, count = 0, html = '';
+        cart.forEach(item => {
+            total += item.price * item.quantity;
+            count += item.quantity;
+            html += `<div class="cart-item"><div><strong>${item.name}</strong><br>₹${item.price} x ${item.quantity}</div><div><button onclick="removeFromCart('${item.id}')">🗑️</button></div></div>`;
+        });
+        document.getElementById('cartItems').innerHTML = html || '<p>Cart empty</p>';
+        document.getElementById('cartTotal').innerHTML = total;
+        document.getElementById('cartCount').innerHTML = count;
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(item => item.id !== id);
+        updateCart();
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function toggleCart() {
+        document.getElementById('cartSidebar').classList.toggle('open');
+        document.getElementById('overlay').style.display = document.getElementById('cartSidebar').classList.contains('open') ? 'block' : 'none';
+    }
+
+    function showCheckout() {
+        if(cart.length === 0) { alert('Cart empty!'); return; }
+        toggleCart();
+        document.getElementById('checkoutModal').style.display = 'flex';
+    }
+    function closeCheckout() { document.getElementById('checkoutModal').style.display = 'none'; }
+    document.getElementById('paymentMethod').addEventListener('change', function() {
+        document.getElementById('upiSection').style.display = this.value === 'upi' ? 'block' : 'none';
+    });
+
+    async function placeOrder() {
+        let address = document.getElementById('deliveryAddress').value;
+        if(!address) { alert('Enter address'); return; }
+        let payment = document.getElementById('paymentMethod').value;
+        await db.collection('orders').add({
+            customerMobile: localStorage.getItem('userMobile') || 'guest',
+            items: cart,
+            total: parseInt(document.getElementById('cartTotal').innerHTML),
+            address: address,
+            paymentMethod: payment,
+            status: 'Order Received',
+            createdAt: new Date().toISOString()
+        });
+        alert('Order placed!');
+        cart = [];
+        updateCart();
+        localStorage.setItem('cart', JSON.stringify(cart));
+        closeCheckout();
+    }
+
+    function showLogin() { document.getElementById('loginModal').style.display = 'flex'; }
+    function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
+    let generatedOTP = null;
+    function sendOTP() {
+        let mobile = document.getElementById('mobileNumber').value;
+        if(mobile.length !== 10) { alert('Enter 10 digit number'); return; }
+        generatedOTP = Math.floor(100000 + Math.random() * 900000);
+        alert(`Demo OTP: ${generatedOTP}`);
+        document.getElementById('otpSection').style.display = 'block';
+    }
+    function verifyOTP() {
+        if(document.getElementById('otpCode').value == generatedOTP) {
+            localStorage.setItem('userMobile', document.getElementById('mobileNumber').value);
+            alert('Login successful!');
+            closeLogin();
+        } else alert('Wrong OTP');
+    }
+    function showAPK() { alert('APK coming soon!'); }
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        if(currentCategory) displayProducts(allProducts.filter(p => p.name.toLowerCase().includes(e.target.value.toLowerCase())));
+    });
+
+    loadCategories();
+    async function addSampleProducts() {
+        let snapshot = await db.collection('products').get();
+        if(snapshot.empty) {
+            let samples = [
+                {name:"Apple",price:120,category:"fruits",image:"https://images.unsplash.com/photo-1570913149827-d2ac84ab3f9a?w=200"},
+                {name:"Banana",price:50,category:"fruits",image:"https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=200"},
+                {name:"Milk",price:55,category:"groceries",image:"https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200"},
+                

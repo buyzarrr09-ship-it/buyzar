@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUYZAR - Delivery Panel</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+        body{background:#f0f2f5;padding:20px;}
+        .header{background:#0B5D1E;color:white;padding:15px;border-radius:10px;margin-bottom:20px;display:flex;justify-content:space-between;}
+        .card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;}
+        .order-card{background:#f9f9f9;padding:15px;border-radius:10px;margin-bottom:15px;border-left:4px solid #0B5D1E;}
+        button{background:#0B5D1E;color:white;padding:8px 15px;border:none;border-radius:5px;cursor:pointer;margin:5px;}
+        .accept{background:#28a745;}
+        .map-btn{background:#007bff;}
+        .delivered{background:#FFD700;color:#0B5D1E;}
+        .login-container{max-width:400px;margin:100px auto;background:white;padding:30px;border-radius:10px;}
+        input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:5px;}
+    </style>
+</head>
+<body>
+<div id="loginDiv"><div class="login-container"><h2>Delivery Boy Login</h2><input type="text" id="loginPhone" placeholder="Phone"><input type="password" id="loginPassword" placeholder="Password"><button onclick="doLogin()">Login</button><p id="loginError" style="color:red;"></p></div></div>
+<div id="dashboardDiv" style="display:none;"><div class="header"><h2>🚚 Delivery Panel</h2><div>Welcome, <span id="boyName"></span> <button onclick="logout()" style="background:#FFD700;color:#0B5D1E;">Logout</button></div></div><div class="card"><h3>Today's Earnings: ₹<span id="todayEarnings">0</span></h3></div><div class="card"><h3>Available Orders</h3><div id="availableOrders"></div></div><div class="card"><h3>My Orders</h3><div id="acceptedOrders"></div></div></div>
+<script src="config.js"></script>
+<script>
+    let currentBoy=null;
+    async function doLogin(){
+        let phone=document.getElementById('loginPhone').value, pass=document.getElementById('loginPassword').value;
+        let s=await db.collection('deliveryBoys').where('phone','==',phone).get();
+        if(s.empty){document.getElementById('loginError').innerHTML='Invalid';return;}
+        let boy=null;
+        s.forEach(d=>boy={id:d.id,...d.data()});
+        if(boy.password===pass){
+            currentBoy=boy;
+            localStorage.setItem('deliveryBoy',JSON.stringify(currentBoy));
+            document.getElementById('loginDiv').style.display='none';
+            document.getElementById('dashboardDiv').style.display='block';
+            document.getElementById('boyName').innerHTML=boy.name;
+            loadOrders();
+        }else document.getElementById('loginError').innerHTML='Wrong password';
+    }
+    async function loadOrders(){
+        let avail=await db.collection('orders').where('status','in',['Order Received','Preparing']).get();
+        let availHtml='';
+        avail.forEach(d=>{let o=d.data();if(!o.deliveryBoyId)availHtml+=`<div class="order-card"><p><strong>Order:</strong> ${d.id.slice(0,8)}</p><p><strong>Address:</strong> ${o.address}</p><p><strong>Total:</strong> ₹${o.total}</p><button class="accept" onclick="acceptOrder('${d.id}')">Accept</button><button class="map-btn" onclick="openMap('${o.address}')">📍 Maps</button></div>`;});
+        document.getElementById('availableOrders').innerHTML=availHtml||'<p>No orders</p>';
+        let my=await db.collection('orders').where('deliveryBoyId','==',currentBoy.id).get();
+        let myHtml='',earn=0;
+        my.forEach(d=>{let o=d.data();if(o.status!=='Delivered')myHtml+=`<div class="order-card"><p><strong>Order:</strong> ${d.id.slice(0,8)}</p><p><strong>Address:</strong> ${o.address}</p><p><strong>Status:</strong> ${o.status}</p><button class="map-btn" onclick="openMap('${o.address}')">📍 Maps</button>${o.status==='Out for Delivery'?`<button class="delivered" onclick="markDelivered('${d.id}')">✅ Delivered</button>`:''}</div>`;else earn+=o.total;});
+        document.getElementById('acceptedOrders').innerHTML=myHtml||'<p>No orders</p>';
+        document.getElementById('todayEarnings').innerHTML=earn;
+    }
+    async function acceptOrder(id){await db.collection('orders').doc(id).update({deliveryBoyId:currentBoy.id,status:'Out for Delivery'});alert('Accepted!');loadOrders();}
+    async function markDelivered(id){await db.collection('orders').doc(id).update({status:'Delivered'});alert('Delivered!');loadOrders();}
+    function openMap(a){window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a+', Begusarai, Bihar')}`,'_blank');}
+    function logout(){currentBoy=null;localStorage.removeItem('deliveryBoy');document.getElementById('loginDiv').style.display='block';document.getElementById('dashboardDiv').style.display='none';}
+    let saved=localStorage.getItem('deliveryBoy');
+    if(saved){currentBoy=JSON.parse(saved);if(currentBoy){document.getElementById('loginDiv').style.display='none';document.getElementById('dashboardDiv').style.display='block';document.getElementById('boyName').innerHTML=currentBoy.name;loadOrders();}}
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUYZAR - Admin Panel</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+        body{background:#f0f2f5;}
+        .sidebar{width:260px;background:#0B5D1E;color:white;position:fixed;height:100%;padding:20px;}
+        .sidebar h2{margin-bottom:30px;}
+        .sidebar a{display:block;color:white;text-decoration:none;padding:12px;margin:5px 0;border-radius:8px;}
+        .sidebar a:hover{background:#1a7a2e;}
+        .main-content{margin-left:260px;padding:20px;}
+        .header{background:white;padding:15px 20px;border-radius:10px;margin-bottom:20px;}
+        .card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;}
+        table{width:100%;border-collapse:collapse;}
+        th,td{padding:12px;text-align:left;border-bottom:1px solid #ddd;}
+        input,select,textarea{padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:5px;width:100%;}
+        button{background:#0B5D1E;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;}
+        .delete-btn{background:red;}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <h2>BUYZAR Admin</h2>
+    <a href="#" onclick="showSection('dashboard')">📊 Dashboard</a>
+    <a href="#" onclick="showSection('products')">🛒 Products</a>
+    <a href="#" onclick="showSection('orders')">📦 Orders</a>
+    <a href="#" onclick="showSection('delivery')">🚚 Delivery Boys</a>
+    <a href="#" onclick="showSection('settings')">⚙️ Settings</a>
+</div>
+<div class="main-content">
+    <div class="header"><h1 id="pageTitle">Dashboard</h1></div>
+    <div id="dashboardSection" class="card"><h3>Welcome Admin!</h3><p>Total Products: <span id="totalProducts">0</span></p><p>Total Orders: <span id="totalOrders">0</span></p><p>Delivery Boys: <span id="totalDeliveryBoys">0</span></p></div>
+    <div id="productsSection" style="display:none;">
+        <div class="card"><h3>Add New Product</h3><input type="text" id="productName" placeholder="Product Name"><input type="number" id="productPrice" placeholder="Price"><select id="productCategory"><option value="groceries">Groceries</option><option value="fruits">Fruits</option><option value="vegetables">Vegetables</option><option value="medicines">Medicines</option><option value="food">Food</option><option value="fashion">Fashion</option></select><input type="text" id="productImage" placeholder="Image URL"><button onclick="addProduct()">Add Product</button></div>
+        <div class="card"><h3>All Products</h3><table id="productsTable"><thead><tr><th>Name</th><th>Price</th><th>Category</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div id="ordersSection" style="display:none;"><div class="card"><h3>All Orders</h3><table id="ordersTable"><thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div></div>
+    <div id="deliverySection" style="display:none;"><div class="card"><h3>Add Delivery Boy</h3><input type="text" id="deliveryName" placeholder="Name"><input type="text" id="deliveryPhone" placeholder="Phone"><input type="text" id="deliveryPassword" placeholder="Password"><button onclick="addDeliveryBoy()">Add</button></div><div class="card"><h3>Delivery Boys</h3><table id="deliveryTable"><thead><tr><th>Name</th><th>Phone</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div></div>
+    <div id="settingsSection" style="display:none;"><div class="card"><h3>Update UPI Number</h3><input type="text" id="upiPhone" placeholder="UPI Phone Number" value="7091342375"><button onclick="updateSettings()">Save</button><p id="settingsMsg"></p></div></div>
+</div>
+<script src="config.js"></script>
+<script>
+    function showSection(section) {
+        document.querySelectorAll('[id$="Section"]').forEach(el => el.style.display = 'none');
+        document.getElementById(section+'Section').style.display = 'block';
+        let titles={dashboard:'Dashboard',products:'Products',orders:'Orders',delivery:'Delivery Boys',settings:'Settings'};
+        document.getElementById('pageTitle').innerHTML = titles[section];
+        if(section==='products') loadProducts();
+        if(section==='orders') loadOrders();
+        if(section==='delivery') loadDeliveryBoys();
+        if(section==='dashboard') loadDashboard();
+    }
+    async function loadDashboard(){
+        let p=await db.collection('products').get();
+        let o=await db.collection('orders').get();
+        let d=await db.collection('deliveryBoys').get();
+        document.getElementById('totalProducts').innerHTML=p.size;
+        document.getElementById('totalOrders').innerHTML=o.size;
+        document.getElementById('totalDeliveryBoys').innerHTML=d.size;
+    }
+    async function loadProducts(){
+        let s=await db.collection('products').get();
+        let html='';
+        s.forEach(d=>html+=`<tr><td>${d.data().name}</td><td>₹${d.data().price}</td><td>${d.data().category}</td><td><button class="delete-btn" onclick="deleteProduct('${d.id}')">Delete</button></td></tr>`);
+        document.querySelector('#productsTable tbody').innerHTML=html;
+    }
+    async function addProduct(){
+        let n=document.getElementById('productName').value, p=parseInt(document.getElementById('productPrice').value), c=document.getElementById('productCategory').value, i=document.getElementById('productImage').value;
+        if(!n||!p){alert('Fill all');return;}
+        await db.collection('products').add({name:n,price:p,category:c,image:i});
+        alert('Added');loadProducts();
+    }
+    async function deleteProduct(id){if(confirm('Delete?')){await db.collection('products').doc(id).delete();loadProducts();}}
+    async function loadOrders(){
+        let s=await db.collection('orders').get();
+        let html='';
+        s.forEach(d=>{let o=d.data();html+=`<tr><td>${d.id.slice(0,8)}</td><td>${o.customerMobile||'guest'}</td><td>₹${o.total}</td><td>${o.status}</td><td><select onchange="updateStatus('${d.id}',this.value)"><option ${o.status==='Order Received'?'selected':''}>Order Received</option><option ${o.status==='Preparing'?'selected':''}>Preparing</option><option ${o.status==='Out for Delivery'?'selected':''}>Out for Delivery</option><option ${o.status==='Delivered'?'selected':''}>Delivered</option></select></td></tr>`;});
+        document.querySelector('#ordersTable tbody').innerHTML=html;
+    }
+    async function updateStatus(id,status){await db.collection('orders').doc(id).update({status});loadOrders();}
+    async function addDeliveryBoy(){
+        let n=document.getElementById('deliveryName').value, ph=document.getElementById('deliveryPhone').value, pw=document.getElementById('deliveryPassword').value||'1234';
+        if(!n||!ph){alert('Fill all');return;}
+        await db.collection('deliveryBoys').add({name:n,phone:ph,password:pw,status:'active'});
+        alert('Added');loadDeliveryBoys();
+    }
+    async function loadDeliveryBoys(){
+        let s=await db.collection('deliveryBoys').get();
+        let html='';
+        s.forEach(d=>html+=`<tr><td>${d.data().name}</td><td>${d.data().phone}</td><td>${d.data().status}</td><td><button class="delete-btn" onclick="deleteBoy('${d.id}')">Delete</button></td></tr>`);
+        document.querySelector('#deliveryTable tbody').innerHTML=html;
+    }
+    async function deleteBoy(id){if(confirm('Remove?')){await db.collection('deliveryBoys').doc(id).delete();loadDeliveryBoys();}}
+    function updateSettings(){let upi=document.getElementById('upiPhone').value;localStorage.setItem('upiPhone',upi);document.getElementById('settingsMsg').innerHTML='Saved: '+upi;}
+    showSection('dashboard');
+</script>
+</body>
+</html>
