@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUYZAR - Ab Har Zarurat, Ek Hi Jagah</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #0B5D1E 0%, #1E3A8A 100%); min-height: 100vh; }
+        .header {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        .main-content { margin-top: 80px; }
+        .logo { font-size: 28px; font-weight: bold; color: white; cursor: pointer; }
+        .logo span { color: #FFD700; }
+        .location { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 25px; color: white; font-size: 12px; }
+        .search-bar { flex: 1; max-width: 350px; }
+        .search-bar input { width: 100%; padding: 10px 15px; border: none; border-radius: 30px; outline: none; }
+        .nav-icons { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .nav-icons a { color: white; text-decoration: none; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .cart-icon, .login-icon, .orders-icon { background: #FFD700; color: #0B5D1E !important; padding: 6px 12px; border-radius: 25px; cursor: pointer; }
+        .user-name { color: #FFD700; background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 25px; font-size: 12px; }
+        .time-warning { background: #ff9800; color: #333; text-align: center; padding: 8px; font-weight: bold; font-size: 12px; }
+        .replacement-badge { background: #4CAF50; color: white; padding: 3px 8px; border-radius: 15px; font-size: 10px; display: inline-block; margin-left: 8px; }
+        .delivery-info { background: #e8f5e9; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; color: #0B5D1E; display: inline-block; margin-top: 8px; }
+        .hero { background: linear-gradient(135deg, rgba(11,93,30,0.85), rgba(30,58,138,0.85)); padding: 30px 15px; text-align: center; color: white; }
+        .hero h1 { font-size: 28px; margin-bottom: 10px; }
+        .hero p { font-size: 14px; margin-bottom: 15px; }
+        .free-offer { background: #FFD700; color: #0B5D1E; display: inline-block; padding: 6px 15px; border-radius: 30px; font-weight: bold; margin: 8px 0; font-size: 12px; }
+        .download-btn { background: white; color: #1E3A8A; padding: 8px 20px; border-radius: 30px; cursor: pointer; display: inline-block; font-weight: bold; margin-top: 8px; font-size: 12px; }
+        .categories-section { padding: 30px 15px; background: rgba(255,255,255,0.95); }
+        .section-title { text-align: center; margin-bottom: 25px; color: #0B5D1E; font-size: 24px; }
+        .category-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 1200px; margin: 0 auto; }
+        .category-card { width: 280px; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.1); cursor: pointer; text-align: center; }
+        .category-card:hover { transform: translateY(-3px); }
+        .category-image { width: 100%; height: 160px; object-fit: cover; }
+        .category-card h3 { margin: 10px 0; color: #0B5D1E; font-size: 18px; }
+        .category-card p { color: #666; font-size: 11px; margin-bottom: 8px; }
+        .shop-now-btn { background: linear-gradient(135deg, #0B5D1E, #1E3A8A); color: white; border: none; padding: 6px 15px; margin: 0 0 12px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+        .products-page { padding: 30px 15px; background: rgba(255,255,255,0.95); display: none; }
+        .products-page.active { display: block; }
+        .back-home-btn { background: #0B5D1E; color: white; border: none; padding: 6px 15px; border-radius: 20px; cursor: pointer; margin-bottom: 20px; font-size: 12px; }
+        .products-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 1200px; margin: 0 auto; }
+        .product-card { width: 220px; background: white; border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; }
+        .product-image { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
+        .product-name { font-size: 14px; margin: 6px 0; }
+        .product-price { background: linear-gradient(135deg, #0B5D1E, #1E3A8A); color: white; font-weight: bold; font-size: 14px; margin: 6px 0; padding: 3px; border-radius: 15px; }
+        .add-to-cart { background: #FFD700; color: #0B5D1E; border: none; padding: 5px 10px; border-radius: 20px; cursor: pointer; font-weight: bold; width: 100%; font-size: 12px; }
+        .cart-sidebar { position: fixed; right: -350px; top: 70px; width: 340px; height: calc(100% - 70px); background: white; z-index: 1001; transition: right 0.3s; padding: 15px; overflow-y: auto; }
+        .cart-sidebar.open { right: 0; }
+        .cart-header { display: flex; justify-content: space-between; border-bottom: 2px solid #0B5D1E; padding-bottom: 8px; margin-bottom: 12px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 6px; background: #f5f5f5; margin-bottom: 6px; border-radius: 6px; font-size: 12px; }
+        .cart-total { font-size: 16px; font-weight: bold; margin: 12px 0; }
+        .delivery-charge { font-size: 12px; margin: 8px 0; padding: 4px; background: #f0f0f0; border-radius: 6px; }
+        .final-total { font-size: 18px; font-weight: bold; color: #0B5D1E; border-top: 2px solid #0B5D1E; padding-top: 8px; margin-top: 8px; }
+        .checkout-btn { background: linear-gradient(135deg, #0B5D1E, #1E3A8A); color: white; width: 100%; padding: 8px; border: none; border-radius: 20px; cursor: pointer; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; }
+        .address-form { max-height: 70vh; overflow-y: auto; }
+        .form-row { margin-bottom: 10px; }
+        .form-row label { font-weight: bold; font-size: 11px; display: block; margin-bottom: 3px; }
+        .form-row input, .form-row select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; }
+        .form-row-half { display: flex; gap: 8px; }
+        .form-row-half .form-row { flex: 1; }
+        .required::after { content: " *"; color: red; }
+        .upload-area { border: 2px dashed #0B5D1E; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; margin: 8px 0; }
+        .screenshot-preview { text-align: center; margin-top: 8px; }
+        .screenshot-preview img { max-width: 100%; max-height: 100px; border-radius: 6px; }
+        .success-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; display: none; }
+        .success-card { background: linear-gradient(135deg, #0B5D1E, #1E3A8A); max-width: 400px; width: 90%; border-radius: 25px; padding: 30px 20px; text-align: center; }
+        .success-card h2 { color: #FFD700; font-size: 22px; margin: 15px 0; }
+        .success-card p { color: white; font-size: 13px; margin: 8px 0; }
+        .success-card .check-icon { font-size: 60px; background: #4CAF50; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; }
+        .success-card button { background: #FFD700; color: #0B5D1E; border: none; padding: 10px 25px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .orders-page { padding: 30px 15px; background: rgba(255,255,255,0.95); display: none; }
+        .orders-page.active { display: block; }
+        .order-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #0B5D1E; }
+        .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        .order-id { font-weight: bold; color: #0B5D1E; font-size: 12px; }
+        .order-status { background: #FFD700; padding: 3px 8px; border-radius: 15px; font-size: 10px; font-weight: bold; }
+        .order-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+        .order-total { font-weight: bold; margin-top: 8px; text-align: right; font-size: 13px; }
+        footer { background: rgba(0,0,0,0.9); color: white; padding: 20px 15px; text-align: center; }
+        .footer-links { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 10px; }
+        .footer-links a { color: white; text-decoration: none; font-size: 10px; }
+        .loading { text-align: center; padding: 30px; font-size: 14px; }
+        @media (max-width: 768px) {
+            .header { flex-direction: column; }
+            .main-content { margin-top: 140px; }
+            .category-card { width: 95%; }
+            .product-card { width: 95%; }
+            .cart-sidebar { width: 100%; right: -100%; top: auto; height: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="goToHome()">BUYZAR<span>.shop</span></div>
+    <div class="location">📍 Begusarai, Bihar</div>
+    <div class="search-bar"><input type="text" id="searchInput" placeholder="Search products..."></div>
+    <div class="nav-icons">
+        <a class="login-icon" id="loginBtn" onclick="showAuthModal()">🔐 Login</a>
+        <span id="userNameDisplay" class="user-name" style="display:none;"></span>
+        <a class="orders-icon" onclick="showMyOrders()">📋 Orders</a>
+        <a class="cart-icon" onclick="toggleCart()">🛒 Cart <span id="cartCount">0</span></a>
+    </div>
+</div>
+
+<div class="main-content">
+    <div id="timeWarning" class="time-warning"></div>
+    <section class="hero">
+        <h1>AB HAR ZARURAT, EK HI JAGAH</h1>
+        <p>Groceries • Fruits • Vegetables • Medicines • Food • Fashion</p>
+        <div class="free-offer">🚚 FREE DELIVERY on orders above ₹199</div>
+        <div class="delivery-info">📦 Below ₹199 → Delivery ₹37 <span class="replacement-badge">🔄 3 Day Replacement</span></div>
+        <div class="download-btn" onclick="alert('App coming soon!')">📱 Download App</div>
+    </section>
+
+    <section class="categories-section" id="categoriesSection">
+        <h2 class="section-title">✨ Shop by Categories ✨</h2>
+        <div class="category-grid" id="categoryGrid"></div>
+    </section>
+
+    <section class="products-page" id="productsPage">
+        <button class="back-home-btn" onclick="goToHome()">← Back</button>
+        <h2 class="section-title" id="productsPageTitle"></h2>
+        <div class="products-grid" id="productsGrid"></div>
+    </section>
+
+    <section class="orders-page" id="ordersPage">
+        <button class="back-home-btn" onclick="goToHome()">← Back</button>
+        <h2 class="section-title">📋 My Orders</h2>
+        <div id="ordersList"></div>
+    </section>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleCart()"></div>
+<div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header"><h3>🛒 Cart</h3><button onclick="toggleCart()" style="background:red; color:white; border:none; padding:4px 10px; border-radius:5px;">✕</button></div>
+    <div id="cartItemsList"></div>
+    <div class="cart-total">Subtotal: ₹<span id="cartSubtotal">0</span></div>
+    <div class="delivery-charge">Delivery: ₹<span id="deliveryCharge">0</span></div>
+    <div class="final-total">Total: ₹<span id="finalTotalAmount">0</span></div>
+    <button class="checkout-btn" onclick="showCheckout()">Checkout →</button>
+</div>
+
+<div id="checkoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1002; justify-content:center; align-items:center;">
+    <div style="background:white; max-width:500px; width:90%; border-radius:15px; padding:20px; max-height:85vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between;"><h3>📦 Delivery Address</h3><button onclick="closeCheckout()" style="background:red; color:white; border:none; padding:4px 10px; border-radius:5px;">✕</button></div>
+        <div class="address-form">
+            <div class="form-row"><label class="required">Full Name</label><input type="text" id="fullName"></div>
+            <div class="form-row"><label class="required">Mobile</label><input type="tel" id="deliveryMobile" maxlength="10"></div>
+            <div class="form-row"><label class="required">Flat/House No.</label><input type="text" id="flatNo"></div>
+            <div class="form-row"><label class="required">Street/Area</label><input type="text" id="street"></div>
+            <div class="form-row"><label>Landmark</label><input type="text" id="landmark"></div>
+            <div class="form-row-half">
+                <div class="form-row"><label class="required">City</label><input type="text" id="city"></div>
+                <div class="form-row"><label class="required">Pincode</label><input type="text" id="pincode" maxlength="6"></div>
+            </div>
+            <div class="form-row"><label>State</label><select id="state"><option>Bihar</option><option>Delhi</option><option>Maharashtra</option></select></div>
+            <div class="form-row"><label>Payment</label><select id="paymentMethod"><option value="cod">💵 Cash on Delivery</option><option value="upi">📱 UPI</option></select></div>
+            <div id="upiSection" style="display:none;">
+                <div class="form-row"><label>UPI App</label><select id="upiApp"><option>Google Pay</option><option>PhonePe</option><option>Paytm</option></select></div>
+                <div style="text-align:center; margin:10px 0; padding:10px; background:#f0f9f0; border-radius:8px;"><p><strong>UPI: 7091342375@ybl</strong></p><button onclick="redirectToUPIApp()" style="background:#0B5D1E; color:white; border:none; padding:6px 12px; border-radius:20px;">📲 Pay Now</button></div>
+                <div class="form-row"><label>Payment Screenshot</label><div class="upload-area" onclick="document.getElementById('screenshotInput').click()">📸 Upload screenshot<input type="file" id="screenshotInput" accept="image/*" style="display:none;" onchange="previewScreenshot(this)"></div><div id="screenshotPreview"></div></div>
+            </div>
+            <button onclick="validateAndPlaceOrder()" style="background:linear-gradient(135deg,#0B5D1E,#1E3A8A); color:white; width:100%; padding:10px; border:none; border-radius:25px; margin-top:10px;">Confirm Order</button>
+        </div>
+    </div>
+</div>
+
+<div id="successModal" class="success-modal">
+    <div class="success-card">
+        <div class="check-icon">✅</div>
+        <h2>🎉 Order Placed! 🎉</h2>
+        <p>✨ Thank you for shopping with BUYZAR ✨</p>
+        <p>📱 Payment screenshot received.</p>
+        <p>🕐 Order will be confirmed after payment verification.</p>
+        <p>🔄 3 Day Replacement Guarantee</p>
+        <button onclick="closeSuccessModal()">Continue Shopping →</button>
+    </div>
+</div>
+
+<div id="authModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1002; justify-content:center; align-items:center;">
+    <div style="background:white; max-width:350px; width:90%; border-radius:15px; padding:20px;">
+        <div style="display:flex; justify-content:space-between;"><h3 id="authTitle">Login</h3><button onclick="closeAuthModal()" style="background:red; color:white; border:none; padding:4px 10px; border-radius:5px;">✕</button></div>
+        <div id="loginForm">
+            <input type="text" id="loginMobile" placeholder="Mobile" style="width:100%; padding:8px; margin:8px 0; border:1px solid #ddd; border-radius:6px;">
+            <input type="password" id="loginPassword" placeholder="Password" style="width:100%; padding:8px; margin:8px 0; border:1px solid #ddd; border-radius:6px;">
+            <button onclick="doLogin()" style="background:linear-gradient(135deg,#0B5D1E,#1E3A8A); color:white; width:100%; padding:8px; border:none; border-radius:20px;">Login</button>
+            <p style="margin-top:10px;">New user? <a href="#" onclick="showSignup()">Sign Up</a></p>
+        </div>
+        <div id="signupForm" style="display:none;">
+            <input type="text" id="signupName" placeholder="Full Name" style="width:100%; padding:8px; margin:8px 0; border:1px solid #ddd; border-radius:6px;">
+            <input type="text" id="signupMobile" placeholder="Mobile" style="width:100%; padding:8px; margin:8px 0; border:1px solid #ddd; border-radius:6px;">
+            <input type="password" id="signupPassword" placeholder="Password" style="width:100%; padding:8px; margin:8px 0; border:1px solid #ddd; border-radius:6px;">
+            <button onclick="doSignup()" style="background:linear-gradient(135deg,#0B5D1E,#1E3A8A); color:white; width:100%; padding:8px; border:none; border-radius:20px;">Sign Up</button>
+            <p style="margin-top:10px;">Already have account? <a href="#" onclick="showLogin()">Login</a></p>
+        </div>
+        <p id="authMessage" style="color:red; font-size:11px;"></p>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-links"><a href="#">About</a><a href="#">Contact</a><a href="#">Privacy</a></div>
+    <p>📍 Begusarai, Bihar | 📞 7091342375 | © 2026 BUYZAR</p>
+</footer>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyC3wPQtwPkZAh-_NJs2f2N-2CJOB0zphFU",
+        authDomain: "buyzar-dfa42.firebaseapp.com",
+        projectId: "buyzar-dfa42",
+        storageBucket: "buyzar-dfa42.firebasestorage.app",
+        messagingSenderId: "763955873108",
+        appId: "1:763955873108:web:1e7865d82612c4a16634c1"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    let currentUser = JSON.parse(localStorage.getItem('buyzarUser')) || null;
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    let currentCategoryId = '';
+    let allProducts = [];
+    let selectedScreenshot = null;
+
+    function isCODAvailable() { let h = new Date().getHours(); return !(h >= 21 || h < 7); }
+    
+    function showTimeWarning() {
+        let w = document.getElementById('timeWarning');
+        if(!isCODAvailable()) { w.style.display='block'; w.innerHTML='⏰ 9PM-7AM: Only UPI available ⏰'; }
+        else w.style.display='none';
+    }
+    
+    function updateDeliveryCharge() {
+        let sub = parseInt(document.getElementById('cartSubtotal').innerHTML) || 0;
+        let delivery = sub >= 199 ? 0 : 37;
+        document.getElementById('deliveryCharge').innerHTML = delivery;
+        document.getElementById('finalTotalAmount').innerHTML = sub + delivery;
+    }
+    
+    const categories = [
+        { id: "fruits_vegetables", name: "🥑 Fresh Fruits & Vegetables", image: "https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?w=300&h=180&fit=crop", desc: "Farm fresh" },
+        { id: "groceries", name: "🛒 Groceries", image: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?w=300&h=180&fit=crop", desc: "Daily needs" },
+        { id: "medicines", name: "💊 Medicines", image: "https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?w=300&h=180&fit=crop", desc: "Healthcare" },
+                    { id: "food", name: "🍔 Food & Restaurant", image: "https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?w=400&h=250&fit=crop", desc: "Pizza, Burger, Biryani & more" },
+            { id: "fashion", name: "👕 Fashion & Apparel", image: "https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg?w=400&h=250&fit=crop", desc: "Shirts, Jeans, T-Shirts, Shoes" }
+        ];
+        
+        function loadCategories() {
+            let html = '';
+            categories.forEach(cat => {
+                html += `<div class="category-card" onclick="loadCategoryProducts('${cat.id}', '${cat.name}')">
+                            <img src="${cat.image}" class="category-image">
+                            <h3>${cat.name}</h3>
+                            <p>${cat.desc}</p>
+                            <button class="shop-now-btn">🛍️ Shop Now →</button>
+                        </div>`;
+            });
+            document.getElementById('categoryGrid').innerHTML = html;
+        }
+
+        async function loadCategoryProducts(categoryId, categoryName) {
+            currentCategoryId = categoryId;
+            document.getElementById('productsPageTitle').innerHTML = categoryName;
+            document.getElementById('categoriesSection').style.display = 'none';
+            document.getElementById('productsPage').classList.add('active');
+            
+            document.getElementById('productsGrid').innerHTML = '<div class="loading">Loading products...</div>';
+            
+            try {
+                const snapshot = await db.collection('products').where('category', '==', categoryId).get();
+                allProducts = [];
+                snapshot.forEach(doc => {
+                    allProducts.push({ id: doc.id, ...doc.data() });
+                });
+                displayProducts(allProducts);
+            } catch(error) {
+                console.error(error);
+                document.getElementById('productsGrid').innerHTML = '<div class="loading">Error loading products. Please try again.</div>';
+            }
+        }
+
+        function displayProducts(products) {
+            let html = '';
+            if(products.length === 0) {
+                html = '<div class="loading">✨ No products yet. Admin will add products soon! ✨</div>';
+            } else {
+                products.forEach(product => {
+                    html += `<div class="product-card">
+                                <img src="${product.image || 'https://placehold.co/250x160/0B5D1E/white?text='+product.name}" class="product-image">
+                                <div class="product-name">${product.name}</div>
+                                <div class="product-price">₹${product.price}</div>
+                                <button class="add-to-cart" onclick="addToCart('${product.id}', '${product.name}', ${product.price})">🛒 Add to Cart</button>
+                            </div>`;
+                });
+            }
+            document.getElementById('productsGrid').innerHTML = html;
+        }
+
+        function goToHome() {
+            document.getElementById('categoriesSection').style.display = 'block';
+            document.getElementById('productsPage').classList.remove('active');
+            document.getElementById('ordersPage').classList.remove('active');
+            document.getElementById('searchInput').value = '';
+        }
+
+        function addToCart(id, name, price) {
+            let existing = cart.find(item => item.id === id);
+            if(existing) {
+                existing.quantity++;
+            } else {
+                cart.push({id, name, price, quantity: 1});
+            }
+            updateCart();
+            saveCart();
+            alert(`✓ ${name} added to cart!`);
+        }
+
+        function updateCart() {
+            let total = 0, count = 0, html = '';
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                count += item.quantity;
+                html += `<div class="cart-item">
+                            <div><strong>${item.name}</strong><br>₹${item.price} x ${item.quantity}</div>
+                            <div><button onclick="removeFromCart('${item.id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px;">🗑️</button></div>
+                        </div>`;
+            });
+            document.getElementById('cartItemsList').innerHTML = html || '<p style="text-align:center;">Cart is empty</p>';
+            document.getElementById('cartSubtotal').innerHTML = total;
+            document.getElementById('cartCount').innerHTML = count;
+            updateDeliveryCharge();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCart();
+            saveCart();
+        }
+
+        function saveCart() { 
+            localStorage.setItem('cart', JSON.stringify(cart)); 
+        }
+        
+        function toggleCart() {
+            document.getElementById('cartSidebar').classList.toggle('open');
+            document.getElementById('overlay').style.display = document.getElementById('cartSidebar').classList.contains('open') ? 'block' : 'none';
+        }
+
+        function showCheckout() {
+            if(cart.length === 0) { 
+                alert('Cart is empty!'); 
+                return; 
+            }
+            if(!currentUser) { 
+                alert('Please login first!'); 
+                showAuthModal(); 
+                return; 
+            }
+            toggleCart();
+            document.getElementById('checkoutModal').style.display = 'flex';
+            loadSavedAddress();
+            let ps = document.getElementById('paymentMethod');
+            let codAvail = isCODAvailable();
+            if(!codAvail) {
+                ps.querySelector('option[value="cod"]').disabled = true;
+                ps.value = 'upi';
+                document.getElementById('upiSection').style.display = 'block';
+            } else {
+                ps.querySelector('option[value="cod"]').disabled = false;
+            }
+        }
+
+        function closeCheckout() { 
+            document.getElementById('checkoutModal').style.display = 'none';
+            selectedScreenshot = null;
+            document.getElementById('screenshotPreview').innerHTML = '';
+        }
+
+        document.getElementById('paymentMethod')?.addEventListener('change', function() {
+            document.getElementById('upiSection').style.display = this.value === 'upi' ? 'block' : 'none';
+            if(this.value === 'cod' && !isCODAvailable()) {
+                alert('⏰ Cash on Delivery is not available between 9 PM to 7 AM. Please select UPI payment.');
+                this.value = 'upi';
+                document.getElementById('upiSection').style.display = 'block';
+            }
+        });
+
+        function redirectToUPIApp() {
+            let upiApp = document.getElementById('upiApp').value;
+            let upiId = "7091342375@ybl";
+            let amount = document.getElementById('finalTotalAmount').innerHTML;
+            let name = "BUYZAR";
+            
+            let upiUrl = "";
+            switch(upiApp) {
+                case "googlepay":
+                    upiUrl = `googlepay://upi/pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR`;
+                    break;
+                case "phonepe":
+                    upiUrl = `phonepe://pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR`;
+                    break;
+                case "paytm":
+                    upiUrl = `paytmmp://upi/pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR`;
+                    break;
+                default:
+                    upiUrl = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR`;
+            }
+            
+            window.location.href = upiUrl;
+            setTimeout(() => {
+                alert("If app doesn't open, please pay manually to UPI ID: 7091342375@ybl");
+            }, 2000);
+        }
+
+        function previewScreenshot(input) {
+            if(input.files && input.files[0]) {
+                selectedScreenshot = input.files[0];
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('screenshotPreview').innerHTML = `<img src="${e.target.result}"><p style="font-size:12px; color:green;">✓ Screenshot ready for upload</p>`;
+                };
+                reader.readAsDataURL(selectedScreenshot);
+            }
+        }
+
+        function closeSuccessModal() { 
+            document.getElementById('successModal').style.display = 'none'; 
+            goToHome(); 
+        }
+
+        async function validateAndPlaceOrder() {
+            let fullName = document.getElementById('fullName').value;
+            let mobile = document.getElementById('deliveryMobile').value;
+            let flatNo = document.getElementById('flatNo').value;
+            let street = document.getElementById('street').value;
+            let city = document.getElementById('city').value;
+            let pincode = document.getElementById('pincode').value;
+            let payment = document.getElementById('paymentMethod').value;
+            
+            if(!fullName) { alert('Please enter full name'); return; }
+            if(!mobile || mobile.length !== 10) { alert('Please enter valid 10 digit mobile number'); return; }
+            if(!flatNo) { alert('Please enter flat/house number'); return; }
+            if(!street) { alert('Please enter street/area'); return; }
+            if(!city) { alert('Please enter city/village name'); return; }
+            if(!pincode || pincode.length !== 6) { alert('Please enter valid 6 digit pincode'); return; }
+            
+            if(payment === 'upi' && !selectedScreenshot) {
+                alert('Please upload payment screenshot after completing payment');
+                return;
+            }
+            
+            await saveAddress();
+            
+            let sub = parseInt(document.getElementById('cartSubtotal').innerHTML);
+            let delivery = sub >= 199 ? 0 : 37;
+            let total = sub + delivery;
+            let landmark = document.getElementById('landmark').value;
+            let state = document.getElementById('state').value;
+            let fullAddress = `${flatNo}, ${street}, ${landmark ? landmark + ', ' : ''}${city}, ${state} - ${pincode}`;
+            
+            let orderData = {
+                userId: currentUser.id,
+                userName: currentUser.name,
+                customerName: fullName,
+                customerMobile: mobile,
+                deliveryAddress: fullAddress,
+                flatNo: flatNo,
+                street: street,
+                landmark: landmark,
+                city: city,
+                pincode: pincode,
+                state: state,
+                items: cart,
+                subtotal: sub,
+                deliveryCharge: delivery,
+                totalAmount: total,
+                paymentMethod: payment,
+                status: payment === 'upi' ? '⏳ Payment Verification Pending' : '✅ Order Confirmed',
+                createdAt: new Date().toISOString()
+            };
+            
+            if(payment === 'upi' && selectedScreenshot) {
+                let ext = selectedScreenshot.name.split('.').pop();
+                let fileName = `screenshot_${Date.now()}_${currentUser.id}.${ext}`;
+                let uploadTask = storage.ref('payment_screenshots/' + fileName).put(selectedScreenshot);
+                uploadTask.on('state_changed', null, null, async () => {
+                    orderData.screenshotUrl = await uploadTask.snapshot.ref.getDownloadURL();
+                    await db.collection('orders').add(orderData);
+                    document.getElementById('successModal').style.display = 'flex';
+                    cart = [];
+                    updateCart();
+                    saveCart();
+                    closeCheckout();
+                });
+                return;
+            }
+            
+            await db.collection('orders').add(orderData);
+            document.getElementById('successModal').style.display = 'flex';
+            cart = [];
+            updateCart();
+            saveCart();
+            closeCheckout();
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            if(currentCategoryId && allProducts.length > 0) {
+                let searchTerm = e.target.value.toLowerCase();
+                let filtered = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
+                displayProducts(filtered);
+            }
+        });
+
+        function showAuthModal() { 
+            document.getElementById('authModal').style.display = 'flex'; 
+        }
+        
+        function closeAuthModal() { 
+            document.getElementById('authModal').style.display = 'none'; 
+        }
+        
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('authTitle').innerHTML = 'Login to Buyzar';
+        }
+        
+        function showSignup() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+            document.getElementById('authTitle').innerHTML = 'Sign Up - Buyzar';
+        }
+
+        async function doLogin() {
+            let mobile = document.getElementById('loginMobile').value;
+            let password = document.getElementById('loginPassword').value;
+            
+            let snapshot = await db.collection('users').where('mobile', '==', mobile).where('password', '==', password).get();
+            if(!snapshot.empty) {
+                snapshot.forEach(doc => {
+                    currentUser = { id: doc.id, ...doc.data() };
+                });
+                localStorage.setItem('buyzarUser', JSON.stringify(currentUser));
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('userNameDisplay').style.display = 'inline-block';
+                document.getElementById('userNameDisplay').innerHTML = `👤 ${currentUser.name}`;
+                alert(`Welcome ${currentUser.name}!`);
+                closeAuthModal();
+            } else {
+                document.getElementById('authMessage').innerHTML = 'Invalid mobile or password';
+            }
+        }
+
+        async function doSignup() {
+            let name = document.getElementById('signupName').value;
+            let mobile = document.getElementById('signupMobile').value;
+            let password = document.getElementById('signupPassword').value;
+            
+            let existing = await db.collection('users').where('mobile', '==', mobile).get();
+            if(!existing.empty) {
+                document.getElementById('authMessage').innerHTML = 'Mobile already registered!';
+                return;
+            }
+            
+            let docRef = await db.collection('users').add({
+                name, mobile, password,
+                createdAt: new Date().toISOString()
+            });
+            currentUser = { id: docRef.id, name, mobile, password };
+            localStorage.setItem('buyzarUser', JSON.stringify(currentUser));
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('userNameDisplay').style.display = 'inline-block';
+            document.getElementById('userNameDisplay').innerHTML = `👤 ${name}`;
+            alert(`Welcome ${name}! Account created successfully.`);
+            closeAuthModal();
+        }
+
+        if(currentUser) {
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('userNameDisplay').style.display = 'inline-block';
+            document.getElementById('userNameDisplay').innerHTML = `👤 ${currentUser.name}`;
+        }
+
+        loadCategories();
+        updateCart();
+        showTimeWarning();
+    </script>
+</body>
+</html>
